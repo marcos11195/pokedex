@@ -6,20 +6,38 @@ const porPagina = 20;
 let paginaActual = 1;
 let listaFiltrada = []; // aquí guardamos los Pokémon filtrados
 
+// Función para obtener el mejor sprite disponible
+function obtenerSprite(data) {
+    return (
+        data.sprites.front_default ||
+        (data.sprites.other["official-artwork"] &&
+            data.sprites.other["official-artwork"].front_default) ||
+        (data.sprites.other["home"] &&
+            data.sprites.other["home"].front_default) ||
+        (data.sprites.other["showdown"] &&
+            data.sprites.other["showdown"].front_default) ||
+        "img/pokeball.png" // fallback genérico (añade tu propia imagen local)
+    );
+}
+
 // Función para mostrar un Pokémon en tarjeta
 function mostrarPokemon(data) {
     const div = document.createElement("div");
     div.className = "pokemon";
 
+    // Lista de sprites disponibles (filtramos los que no sean null)
     const sprites = [
         data.sprites.front_default,
         data.sprites.back_default,
         data.sprites.front_shiny,
-        data.sprites.back_shiny
+        data.sprites.back_shiny,
+        data.sprites.other["official-artwork"]?.front_default,
+        data.sprites.other["home"]?.front_default,
+        // data.sprites.other["showdown"]?.front_default
     ].filter(url => url);
 
     const img = document.createElement("img");
-    img.src = sprites[0];
+    img.src = sprites[0] || "img/pokeball.png"; // fallback si no hay ninguno
     div.appendChild(img);
 
     const info = document.createElement("div");
@@ -31,11 +49,14 @@ function mostrarPokemon(data) {
   `;
     div.appendChild(info);
 
-    let index = 0;
-    setInterval(() => {
-        index = (index + 1) % sprites.length;
-        img.src = sprites[index];
-    }, 1000);
+    // Ciclar sprites cada 1 segundo (solo si hay más de uno)
+    if (sprites.length > 1) {
+        let index = 0;
+        setInterval(() => {
+            index = (index + 1) % sprites.length;
+            img.src = sprites[index];
+        }, 1000);
+    }
 
     pokedex.appendChild(div);
 }

@@ -1,46 +1,69 @@
 const pokedex = document.getElementById("pokedex");
 const paginador = document.getElementById("paginador");
+const filtroTipo = document.getElementById("tipo");
 
-const totalPokemon = 1025;   // número total actual en PokéAPI
-const porPagina = 20;        // cuantos por página
-const totalPaginas = Math.ceil(totalPokemon / porPagina);
-
+const porPagina = 20;
 let paginaActual = 1;
+let listaFiltrada = []; // aquí guardamos los Pokémon filtrados
 
-async function cargarPokemon(id) {
-    const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-    const data = await resp.json();
-
+// Función para mostrar un Pokémon en tarjeta
+function mostrarPokemon(data) {
     const div = document.createElement("div");
     div.className = "pokemon";
-    div.innerHTML = `
+
+    const sprites = [
+        data.sprites.front_default,
+        data.sprites.back_default,
+        data.sprites.front_shiny,
+        data.sprites.back_shiny
+    ].filter(url => url);
+
+    const img = document.createElement("img");
+    img.src = sprites[0];
+    div.appendChild(img);
+
+    const info = document.createElement("div");
+    info.innerHTML = `
     <h3>${data.name.toUpperCase()}</h3>
-    <img src="${data.sprites.front_default}" alt="${data.name}">
     <p>Altura: ${data.height}</p>
     <p>Peso: ${data.weight}</p>
     <p>Tipo: ${data.types.map(t => t.type.name).join(", ")}</p>
   `;
+    div.appendChild(info);
+
+    let index = 0;
+    setInterval(() => {
+        index = (index + 1) % sprites.length;
+        img.src = sprites[index];
+    }, 1000);
 
     pokedex.appendChild(div);
 }
 
+// Cargar una página de la lista filtrada
 async function cargarPagina(numPagina) {
-    pokedex.innerHTML = ""; // limpiar
-    const inicio = (numPagina - 1) * porPagina + 1;
-    const fin = Math.min(numPagina * porPagina, totalPokemon);
+    pokedex.innerHTML = "";
+    const inicio = (numPagina - 1) * porPagina;
+    const fin = Math.min(numPagina * porPagina, listaFiltrada.length);
 
-    for (let i = inicio; i <= fin; i++) {
-        await cargarPokemon(i);
+    const promesas = [];
+    for (let i = inicio; i < fin; i++) {
+        const url = listaFiltrada[i].pokemon.url;
+        promesas.push(fetch(url).then(resp => resp.json()));
     }
+
+    const resultados = await Promise.all(promesas);
+    resultados.forEach(data => mostrarPokemon(data));
 
     paginaActual = numPagina;
     actualizarPaginador();
 }
 
+// Actualizar el paginador
 function actualizarPaginador() {
     paginador.innerHTML = "";
+    const totalPaginas = Math.ceil(listaFiltrada.length / porPagina);
 
-    // Botón anterior
     const prev = document.createElement("button");
     prev.textContent = "«";
     prev.className = "page-btn";
@@ -48,7 +71,6 @@ function actualizarPaginador() {
     prev.onclick = () => cargarPagina(paginaActual - 1);
     paginador.appendChild(prev);
 
-    // Botones numéricos (ejemplo: mostrar 10 alrededor)
     const rango = 5;
     let inicio = Math.max(1, paginaActual - rango);
     let fin = Math.min(totalPaginas, paginaActual + rango);
@@ -61,7 +83,6 @@ function actualizarPaginador() {
         paginador.appendChild(btn);
     }
 
-    // Botón siguiente
     const next = document.createElement("button");
     next.textContent = "»";
     next.className = "page-btn";
@@ -70,5 +91,29 @@ function actualizarPaginador() {
     paginador.appendChild(next);
 }
 
-// primera carga
-cargarPagina(1);
+// Generar lista filtrada desde la API de tipos
+async function generarListaFiltrada(tipo) {
+    if (!tipo) {
+        // Si no hay filtro, cargamos todos los Pokémon
+        const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
+        const data = await resp.json();
+        listaFiltrada = data.results.map(p => ({ pokemon: p }));
+    } else {
+        const resp = await fetch(`https://pokeapi.co/api/v2/type/${tipo}`);
+        const data = await resp.json();
+        listaFiltrada = data.pokemon; // array con {pokemon: {name, url}}
+    }
+}
+
+// Evento para cambiar filtro
+filtroTipo.addEventListener("change", async () => {
+    const tipoSeleccionado = filtroTipo.value;
+    await generarListaFiltrada(tipoSeleccionado);
+    cargarPagina(1);
+});
+
+// Primera carga (todos los Pokémon)
+(async () => {
+    await generarListaFiltrada("");
+    cargarPagina(1);
+})();

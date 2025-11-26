@@ -1,14 +1,15 @@
 const pokedex = document.getElementById("pokedex");
-const paginador = document.getElementById("paginador");
+const paginadorTop = document.getElementById("paginador-top");
+const paginadorBottom = document.getElementById("paginador-bottom");
 const filtroTipo = document.getElementById("tipo");
 const buscador = document.getElementById("buscador");
 
 const porPagina = 20;
 let paginaActual = 1;
-let listaCompleta = [];   // base (según tipo), ordenada por ID
-let listaFiltrada = [];   // resultado tras aplicar buscador
+let listaCompleta = [];   // lista base (según tipo)
+let listaFiltrada = [];   // lista tras aplicar buscador
 
-// Obtener lista de Pokémon por tipo (y ordenar por ID nacional)
+// Obtener lista de Pokémon por tipo
 async function generarListaPorTipo(tipo) {
     if (!tipo) {
         // Todos los Pokémon
@@ -72,7 +73,7 @@ function mostrarPokemon(data) {
   `;
     card.appendChild(info);
 
-    // Ciclado de sprites solo en hover
+    // 🔹 Ciclo de sprites solo en hover
     let intervalId = null;
     let index = 0;
 
@@ -117,47 +118,53 @@ async function cargarPagina(numPagina) {
     actualizarPaginador();
 }
 
-// Paginador
+// Paginador (arriba y abajo)
 function actualizarPaginador() {
-    paginador.innerHTML = "";
+    paginadorTop.innerHTML = "";
+    paginadorBottom.innerHTML = "";
+
     const totalPaginas = Math.ceil(listaFiltrada.length / porPagina) || 1;
 
-    const prev = document.createElement("button");
-    prev.textContent = "«";
-    prev.className = "page-btn";
-    prev.disabled = paginaActual === 1;
-    prev.onclick = () => cargarPagina(paginaActual - 1);
-    paginador.appendChild(prev);
+    function crearBotones(container) {
+        const prev = document.createElement("button");
+        prev.textContent = "«";
+        prev.className = "page-btn";
+        prev.disabled = paginaActual === 1;
+        prev.onclick = () => cargarPagina(paginaActual - 1);
+        container.appendChild(prev);
 
-    const rango = 5;
-    const inicio = Math.max(1, paginaActual - rango);
-    const fin = Math.min(totalPaginas, paginaActual + rango);
+        const rango = 5;
+        const inicio = Math.max(1, paginaActual - rango);
+        const fin = Math.min(totalPaginas, paginaActual + rango);
 
-    for (let i = inicio; i <= fin; i++) {
-        const btn = document.createElement("button");
-        btn.textContent = i;
-        btn.className = "page-btn" + (i === paginaActual ? " active" : "");
-        btn.onclick = () => cargarPagina(i);
-        paginador.appendChild(btn);
+        for (let i = inicio; i <= fin; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            btn.className = "page-btn" + (i === paginaActual ? " active" : "");
+            btn.onclick = () => cargarPagina(i);
+            container.appendChild(btn);
+        }
+
+        const next = document.createElement("button");
+        next.textContent = "»";
+        next.className = "page-btn";
+        next.disabled = paginaActual === totalPaginas;
+        next.onclick = () => cargarPagina(paginaActual + 1);
+        container.appendChild(next);
     }
 
-    const next = document.createElement("button");
-    next.textContent = "»";
-    next.className = "page-btn";
-    next.disabled = paginaActual === totalPaginas;
-    next.onclick = () => cargarPagina(paginaActual + 1);
-    paginador.appendChild(next);
+    crearBotones(paginadorTop);
+    crearBotones(paginadorBottom);
 }
 
 // Evento de filtro por tipo
 filtroTipo.addEventListener("change", async () => {
     await generarListaPorTipo(filtroTipo.value);
-    // Al cambiar de tipo, reseteamos buscador y paginación
-    buscador.value = "";
+    buscador.value = ""; // reset buscador
     cargarPagina(1);
 });
 
-// Evento de buscador por nombre (filtra sobre la lista del tipo seleccionado)
+// Evento de buscador por nombre
 buscador.addEventListener("input", () => {
     const texto = buscador.value.toLowerCase().trim();
     if (!texto) {

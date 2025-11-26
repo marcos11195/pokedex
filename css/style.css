@@ -1,54 +1,59 @@
 body {
     font-family: Arial, sans-serif;
-    background: #f0f0f0;
+    background: #fafafa;
+    margin: 0;
+    padding: 20px;
     text-align: center;
 }
 
 h1 {
-    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.filtros {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.filtros select,
+.filtros input {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
 }
 
 #pokedex {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 15px;
 }
 
 .pokemon {
-    background: #fff;
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    margin: 10px;
+    border-radius: 12px;
+    width: 200px;
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Zona central con degradado */
+.pokemon div {
+    width: 100%;
     padding: 10px;
-    width: 150px;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6));
     text-align: center;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .pokemon img {
     width: 120px;
-}
-
-#paginador {
-    margin: 20px;
-}
-
-.page-btn {
-    background: #3498db;
-    color: #fff;
-    border: none;
-    margin: 2px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.page-btn:hover {
-    background: #2980b9;
-}
-
-.page-btn.active {
-    background: #e74c3c;
+    height: 120px;
 }
 
 .tipo {
@@ -58,79 +63,172 @@ h1 {
     color: #fff;
     font-weight: bold;
     margin: 2px;
+    font-size: 12px;
 }
 
-/* Colores por tipo */
+/* Colores suaves de fondo por tipo principal */
+.bg-normal {
+    background: #A8A87833;
+}
+
+.bg-fire {
+    background: #F0803033;
+}
+
+.bg-water {
+    background: #6890F033;
+}
+
+.bg-grass {
+    background: #78C85033;
+}
+
+.bg-electric {
+    background: #F8D03033;
+}
+
+.bg-ice {
+    background: #98D8D833;
+}
+
+.bg-fighting {
+    background: #C0302833;
+}
+
+.bg-poison {
+    background: #A040A033;
+}
+
+.bg-ground {
+    background: #E0C06833;
+}
+
+.bg-flying {
+    background: #A890F033;
+}
+
+.bg-psychic {
+    background: #F8588833;
+}
+
+.bg-bug {
+    background: #A8B82033;
+}
+
+.bg-rock {
+    background: #B8A03833;
+}
+
+.bg-ghost {
+    background: #70589833;
+}
+
+.bg-dark {
+    background: #70584833;
+}
+
+.bg-dragon {
+    background: #7038F833;
+}
+
+.bg-steel {
+    background: #B8B8D033;
+}
+
+.bg-fairy {
+    background: #EE99AC33;
+}
+
+/* Colores de etiquetas de tipo */
+.tipo.normal {
+    background: #A8A878;
+    color: #000;
+}
+
 .tipo.fire {
-    background-color: #F08030;
+    background: #F08030;
 }
 
 .tipo.water {
-    background-color: #6890F0;
+    background: #6890F0;
 }
 
 .tipo.grass {
-    background-color: #78C850;
+    background: #78C850;
 }
 
 .tipo.electric {
-    background-color: #F8D030;
+    background: #F8D030;
     color: #000;
 }
 
 .tipo.ice {
-    background-color: #98D8D8;
+    background: #98D8D8;
     color: #000;
 }
 
 .tipo.fighting {
-    background-color: #C03028;
+    background: #C03028;
 }
 
 .tipo.poison {
-    background-color: #A040A0;
+    background: #A040A0;
 }
 
 .tipo.ground {
-    background-color: #E0C068;
+    background: #E0C068;
     color: #000;
 }
 
 .tipo.flying {
-    background-color: #A890F0;
+    background: #A890F0;
 }
 
 .tipo.psychic {
-    background-color: #F85888;
+    background: #F85888;
 }
 
 .tipo.bug {
-    background-color: #A8B820;
+    background: #A8B820;
     color: #000;
 }
 
 .tipo.rock {
-    background-color: #B8A038;
+    background: #B8A038;
     color: #000;
 }
 
 .tipo.ghost {
-    background-color: #705898;
+    background: #705898;
 }
 
 .tipo.dark {
-    background-color: #705848;
+    background: #705848;
 }
 
 .tipo.dragon {
-    background-color: #7038F8;
+    background: #7038F8;
 }
 
 .tipo.steel {
-    background-color: #B8B8D0;
+    background: #B8B8D0;
     color: #000;
 }
 
 .tipo.fairy {
-    background-color: #EE99AC;
+    background: #EE99AC;
+}
+
+.page-btn {
+    margin: 2px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    background: #eee;
+    cursor: pointer;
+}
+
+.page-btn.active {
+    background: #007bff;
+    color: #fff;
 }

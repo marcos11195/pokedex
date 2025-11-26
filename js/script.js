@@ -1,83 +1,126 @@
 const pokedex = document.getElementById("pokedex");
 const paginador = document.getElementById("paginador");
 const filtroTipo = document.getElementById("tipo");
+const buscador = document.getElementById("buscador");
 
 const porPagina = 20;
 let paginaActual = 1;
-let listaFiltrada = []; // aquí guardamos los Pokémon filtrados
+let listaCompleta = [];   // base (según tipo), ordenada por ID
+let listaFiltrada = [];   // resultado tras aplicar buscador
 
-// Función para mostrar un Pokémon en tarjeta
+// Obtener lista de Pokémon por tipo (y ordenar por ID nacional)
+async function generarListaPorTipo(tipo) {
+    if (!tipo) {
+        // Todos los Pokémon
+        const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
+        const data = await resp.json();
+        listaCompleta = data.results.map(p => {
+            const id = parseInt(p.url.split("/").slice(-2, -1)[0], 10);
+            return { name: p.name, url: p.url, id };
+        });
+    } else {
+        // Solo los de ese tipo
+        const resp = await fetch(`https://pokeapi.co/api/v2/type/${tipo}`);
+        const data = await resp.json();
+        listaCompleta = data.pokemon.map(p => {
+            const id = parseInt(p.pokemon.url.split("/").slice(-2, -1)[0], 10);
+            return { name: p.pokemon.name, url: p.pokemon.url, id };
+        });
+    }
+
+    // Ordenar por ID
+    listaCompleta.sort((a, b) => a.id - b.id);
+
+    // Inicialmente, lista filtrada = lista completa
+    listaFiltrada = [...listaCompleta];
+}
+
+// Mostrar tarjeta de Pokémon
 function mostrarPokemon(data) {
-    const div = document.createElement("div");
-    div.className = "pokemon";
+    const card = document.createElement("div");
+    card.className = "pokemon";
 
-    // Lista de sprites disponibles (filtramos los que no sean null)
+    // Tipo principal para fondo
+    const tipoPrincipal = data.types[0]?.type?.name || "normal";
+    card.classList.add(`bg-${tipoPrincipal}`);
+
     const sprites = [
         data.sprites.front_default,
         data.sprites.back_default,
         data.sprites.front_shiny,
         data.sprites.back_shiny,
-        data.sprites.other["official-artwork"]?.front_default,
-        data.sprites.other["home"]?.front_default,
-        //data.sprites.other["showdown"]?.front_default
-    ].filter(url => url);
+        data.sprites.other?.["official-artwork"]?.front_default
+    ].filter(Boolean);
 
     const img = document.createElement("img");
-    img.src = sprites[0] || "img/pokeball.png"; // fallback si no hay ninguno
-    div.appendChild(img);
+    img.src = sprites[0] || "img/pokeball.png";
+    card.appendChild(img);
 
-    // Generar etiquetas de tipo con colores
     const tiposHTML = data.types
-        .map(t => {
-            const tipo = t.type.name; // ej: "fire"
-            return `<span class="tipo ${tipo}">${tipo.toUpperCase()}</span>`;
-        })
+        .map(t => `<span class="tipo ${t.type.name}">${t.type.name.toUpperCase()}</span>`)
         .join(" ");
+
+    const alturaMetros = (data.height ?? 0) / 10;
+    const pesoKg = (data.weight ?? 0) / 10;
 
     const info = document.createElement("div");
     info.innerHTML = `
-    <h3>${data.name.toUpperCase()}</h3>
-    <p>Altura: ${data.height}</p>
-    <p>Peso: ${data.weight}</p>
+    <h3>#${data.id} ${data.name.toUpperCase()}</h3>
+    <p>Altura: ${alturaMetros} m</p>
+    <p>Peso: ${pesoKg} kg</p>
     <p>Tipo: ${tiposHTML}</p>
   `;
-    div.appendChild(info);
+    card.appendChild(info);
 
-    // Ciclar sprites cada 1 segundo (solo si hay más de uno)
-    if (sprites.length > 1) {
-        let index = 0;
-        setInterval(() => {
-            index = (index + 1) % sprites.length;
-            img.src = sprites[index];
-        }, 1000);
-    }
+    // Ciclado de sprites solo en hover
+    let intervalId = null;
+    let index = 0;
 
-    pokedex.appendChild(div);
+    card.addEventListener("mouseenter", () => {
+        if (sprites.length > 1 && !intervalId) {
+            intervalId = setInterval(() => {
+                index = (index + 1) % sprites.length;
+                img.src = sprites[index];
+            }, 1000);
+            card.style.cursor = "pointer";
+        }
+    });
+
+    card.addEventListener("mouseleave", () => {
+        if (intervalId) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+        img.src = sprites[0] || "img/pokeball.png";
+        index = 0;
+    });
+
+    pokedex.appendChild(card);
 }
 
-// Cargar una página de la lista filtrada
+// Cargar una página
 async function cargarPagina(numPagina) {
     pokedex.innerHTML = "";
+
+    const total = listaFiltrada.length;
     const inicio = (numPagina - 1) * porPagina;
-    const fin = Math.min(numPagina * porPagina, listaFiltrada.length);
+    const fin = Math.min(numPagina * porPagina, total);
+    const slice = listaFiltrada.slice(inicio, fin);
 
-    const promesas = [];
-    for (let i = inicio; i < fin; i++) {
-        const url = listaFiltrada[i].pokemon.url;
-        promesas.push(fetch(url).then(resp => resp.json()));
-    }
+    const resultados = await Promise.all(
+        slice.map(item => fetch(item.url).then(r => r.json()))
+    );
 
-    const resultados = await Promise.all(promesas);
-    resultados.forEach(data => mostrarPokemon(data));
+    resultados.forEach(mostrarPokemon);
 
     paginaActual = numPagina;
     actualizarPaginador();
 }
 
-// Actualizar el paginador
+// Paginador
 function actualizarPaginador() {
     paginador.innerHTML = "";
-    const totalPaginas = Math.ceil(listaFiltrada.length / porPagina);
+    const totalPaginas = Math.ceil(listaFiltrada.length / porPagina) || 1;
 
     const prev = document.createElement("button");
     prev.textContent = "«";
@@ -87,8 +130,8 @@ function actualizarPaginador() {
     paginador.appendChild(prev);
 
     const rango = 5;
-    let inicio = Math.max(1, paginaActual - rango);
-    let fin = Math.min(totalPaginas, paginaActual + rango);
+    const inicio = Math.max(1, paginaActual - rango);
+    const fin = Math.min(totalPaginas, paginaActual + rango);
 
     for (let i = inicio; i <= fin; i++) {
         const btn = document.createElement("button");
@@ -106,29 +149,27 @@ function actualizarPaginador() {
     paginador.appendChild(next);
 }
 
-// Generar lista filtrada desde la API de tipos
-async function generarListaFiltrada(tipo) {
-    if (!tipo) {
-        // Si no hay filtro, cargamos todos los Pokémon
-        const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
-        const data = await resp.json();
-        listaFiltrada = data.results.map(p => ({ pokemon: p }));
-    } else {
-        const resp = await fetch(`https://pokeapi.co/api/v2/type/${tipo}`);
-        const data = await resp.json();
-        listaFiltrada = data.pokemon; // array con {pokemon: {name, url}}
-    }
-}
-
-// Evento para cambiar filtro
+// Evento de filtro por tipo
 filtroTipo.addEventListener("change", async () => {
-    const tipoSeleccionado = filtroTipo.value;
-    await generarListaFiltrada(tipoSeleccionado);
+    await generarListaPorTipo(filtroTipo.value);
+    // Al cambiar de tipo, reseteamos buscador y paginación
+    buscador.value = "";
     cargarPagina(1);
 });
 
-// Primera carga (todos los Pokémon)
+// Evento de buscador por nombre (filtra sobre la lista del tipo seleccionado)
+buscador.addEventListener("input", () => {
+    const texto = buscador.value.toLowerCase().trim();
+    if (!texto) {
+        listaFiltrada = [...listaCompleta];
+    } else {
+        listaFiltrada = listaCompleta.filter(p => p.name.includes(texto));
+    }
+    cargarPagina(1);
+});
+
+// Primera carga (todos)
 (async () => {
-    await generarListaFiltrada("");
+    await generarListaPorTipo("");
     cargarPagina(1);
 })();

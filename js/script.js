@@ -6,20 +6,6 @@ const porPagina = 20;
 let paginaActual = 1;
 let listaFiltrada = []; // aquí guardamos los Pokémon filtrados
 
-// Función para obtener el mejor sprite disponible
-function obtenerSprite(data) {
-    return (
-        data.sprites.front_default ||
-        (data.sprites.other["official-artwork"] &&
-            data.sprites.other["official-artwork"].front_default) ||
-        (data.sprites.other["home"] &&
-            data.sprites.other["home"].front_default) ||
-        (data.sprites.other["showdown"] &&
-            data.sprites.other["showdown"].front_default) ||
-        "img/pokeball.png" // fallback genérico (añade tu propia imagen local)
-    );
-}
-
 // Función para mostrar un Pokémon en tarjeta
 function mostrarPokemon(data) {
     const div = document.createElement("div");
@@ -33,19 +19,27 @@ function mostrarPokemon(data) {
         data.sprites.back_shiny,
         data.sprites.other["official-artwork"]?.front_default,
         data.sprites.other["home"]?.front_default,
-        // data.sprites.other["showdown"]?.front_default
+        //data.sprites.other["showdown"]?.front_default
     ].filter(url => url);
 
     const img = document.createElement("img");
     img.src = sprites[0] || "img/pokeball.png"; // fallback si no hay ninguno
     div.appendChild(img);
 
+    // Generar etiquetas de tipo con colores
+    const tiposHTML = data.types
+        .map(t => {
+            const tipo = t.type.name; // ej: "fire"
+            return `<span class="tipo ${tipo}">${tipo.toUpperCase()}</span>`;
+        })
+        .join(" ");
+
     const info = document.createElement("div");
     info.innerHTML = `
     <h3>${data.name.toUpperCase()}</h3>
     <p>Altura: ${data.height}</p>
     <p>Peso: ${data.weight}</p>
-    <p>Tipo: ${data.types.map(t => t.type.name).join(", ")}</p>
+    <p>Tipo: ${tiposHTML}</p>
   `;
     div.appendChild(info);
 

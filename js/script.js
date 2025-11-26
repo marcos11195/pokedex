@@ -3,16 +3,29 @@ const paginadorTop = document.getElementById("paginador-top");
 const paginadorBottom = document.getElementById("paginador-bottom");
 const filtroTipo = document.getElementById("tipo");
 const buscador = document.getElementById("buscador");
+const detalle = document.getElementById("detalle");
 
 const porPagina = 20;
 let paginaActual = 1;
-let listaCompleta = [];   // lista base (según tipo)
-let listaFiltrada = [];   // lista tras aplicar buscador
+let listaCompleta = [];
+let listaFiltrada = [];
+
+// Mapeo de generación a región
+const generacionRegion = {
+    "generation-i": "Kanto",
+    "generation-ii": "Johto",
+    "generation-iii": "Hoenn",
+    "generation-iv": "Sinnoh",
+    "generation-v": "Unova",
+    "generation-vi": "Kalos",
+    "generation-vii": "Alola",
+    "generation-viii": "Galar",
+    "generation-ix": "Paldea"
+};
 
 // Obtener lista de Pokémon por tipo
 async function generarListaPorTipo(tipo) {
     if (!tipo) {
-        // Todos los Pokémon
         const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
         const data = await resp.json();
         listaCompleta = data.results.map(p => {
@@ -20,7 +33,6 @@ async function generarListaPorTipo(tipo) {
             return { name: p.name, url: p.url, id };
         });
     } else {
-        // Solo los de ese tipo
         const resp = await fetch(`https://pokeapi.co/api/v2/type/${tipo}`);
         const data = await resp.json();
         listaCompleta = data.pokemon.map(p => {
@@ -29,10 +41,7 @@ async function generarListaPorTipo(tipo) {
         });
     }
 
-    // Ordenar por ID
     listaCompleta.sort((a, b) => a.id - b.id);
-
-    // Inicialmente, lista filtrada = lista completa
     listaFiltrada = [...listaCompleta];
 }
 
@@ -41,7 +50,6 @@ function mostrarPokemon(data) {
     const card = document.createElement("div");
     card.className = "pokemon";
 
-    // Tipo principal para fondo
     const tipoPrincipal = data.types[0]?.type?.name || "normal";
     card.classList.add(`bg-${tipoPrincipal}`);
 
@@ -73,10 +81,9 @@ function mostrarPokemon(data) {
   `;
     card.appendChild(info);
 
-    // 🔹 Ciclo de sprites solo en hover
+    // Ciclo de sprites solo en hover
     let intervalId = null;
     let index = 0;
-
     card.addEventListener("mouseenter", () => {
         if (sprites.length > 1 && !intervalId) {
             intervalId = setInterval(() => {
@@ -86,7 +93,6 @@ function mostrarPokemon(data) {
             card.style.cursor = "pointer";
         }
     });
-
     card.addEventListener("mouseleave", () => {
         if (intervalId) {
             clearInterval(intervalId);
@@ -94,6 +100,54 @@ function mostrarPokemon(data) {
         }
         img.src = sprites[0] || "img/pokeball.png";
         index = 0;
+    });
+
+    // Evento de clic para mostrar detalle
+    card.addEventListener("click", async () => {
+        // Obtener especie para saber la generación
+        const respSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${data.id}`);
+        const speciesData = await respSpecies.json();
+        const generacion = speciesData.generation?.name;
+        const region = generacionRegion[generacion] || "Desconocida";
+
+        // Construir tabla de estadísticas
+        const statsTable = `
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th>Stat</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.stats.map(s => `
+            <tr>
+              <td>${s.stat.name.toUpperCase()}</td>
+              <td>${s.base_stat}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+        detalle.style.display = "block";
+        detalle.innerHTML = `
+      <h2>Pokémon seleccionado</h2>
+      <img src="${sprites[0] || "img/pokeball.png"}" alt="${data.name}">
+      <h3>#${data.id} ${data.name.toUpperCase()}</h3>
+      <p><strong>Altura:</strong> ${alturaMetros} m</p>
+      <p><strong>Peso:</strong> ${pesoKg} kg</p>
+      <p><strong>Tipos:</strong> ${tiposHTML}</p>
+      <p><strong>Región:</strong> ${region}</p>
+      <p><strong>Habilidades:</strong> ${data.abilities.map(a => a.ability.name).join(", ")}</p>
+      ${statsTable}
+      <button id="cerrar-detalle">Cerrar</button>
+    `;
+
+        document.getElementById("cerrar-detalle").addEventListener("click", () => {
+            detalle.style.display = "none";
+            detalle.innerHTML = "";
+        });
     });
 
     pokedex.appendChild(card);
@@ -118,7 +172,7 @@ async function cargarPagina(numPagina) {
     actualizarPaginador();
 }
 
-// Paginador (arriba y abajo)
+// Paginador arriba y abajo
 function actualizarPaginador() {
     paginadorTop.innerHTML = "";
     paginadorBottom.innerHTML = "";
@@ -157,14 +211,13 @@ function actualizarPaginador() {
     crearBotones(paginadorBottom);
 }
 
-// Evento de filtro por tipo
+// Eventos
 filtroTipo.addEventListener("change", async () => {
     await generarListaPorTipo(filtroTipo.value);
-    buscador.value = ""; // reset buscador
+    buscador.value = "";
     cargarPagina(1);
 });
 
-// Evento de buscador por nombre
 buscador.addEventListener("input", () => {
     const texto = buscador.value.toLowerCase().trim();
     if (!texto) {
@@ -175,7 +228,7 @@ buscador.addEventListener("input", () => {
     cargarPagina(1);
 });
 
-// Primera carga (todos)
+// Primera carga
 (async () => {
     await generarListaPorTipo("");
     cargarPagina(1);

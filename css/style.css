@@ -232,3 +232,37 @@ h1 {
     background: #007bff;
     color: #fff;
 }
+
+#detalle {
+    margin: 20px auto;
+    max-width: 600px;
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    display: none;
+    /* oculto al inicio */
+}
+
+#detalle img {
+    width: 150px;
+    height: 150px;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.stats-table th,
+.stats-table td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: center;
+}
+
+.stats-table th {
+    background: #f0f0f0;
+}

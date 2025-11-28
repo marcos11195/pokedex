@@ -3,14 +3,15 @@ const paginadorTop = document.getElementById("paginador-top");
 const paginadorBottom = document.getElementById("paginador-bottom");
 const filtroTipo = document.getElementById("tipo");
 const buscador = document.getElementById("buscador");
+const filtroFavoritos = document.getElementById("filtro-favoritos");
 const detalle = document.getElementById("detalle");
 
 const porPagina = 20;
 let paginaActual = 1;
 let listaCompleta = [];
 let listaFiltrada = [];
+let favoritos = [];
 
-// Mapeo de generación a región
 const generacionRegion = {
     "generation-i": "Kanto",
     "generation-ii": "Johto",
@@ -23,14 +24,12 @@ const generacionRegion = {
     "generation-ix": "Paldea"
 };
 
-// Función auxiliar para obtener traducción
 function traducirNombre(array, idioma = "es") {
     if (!Array.isArray(array)) return "";
     const traduccion = array.find(n => n.language?.name === idioma);
     return traduccion ? traduccion.name : array[0]?.name || "";
 }
 
-// Función auxiliar para traducir estadísticas
 async function traducirStat(statUrl) {
     const resp = await fetch(statUrl);
     const statData = await resp.json();
@@ -52,13 +51,13 @@ async function generarListaPorTipo(tipo) {
             return { name: p.pokemon.name, url: p.pokemon.url, id };
         });
     }
-
     listaCompleta.sort((a, b) => a.id - b.id);
     listaFiltrada = [...listaCompleta];
 }
 async function mostrarPokemon(data) {
     const card = document.createElement("div");
     card.className = "pokemon";
+    card.style.position = "relative";
 
     const tipoPrincipal = data.types[0]?.type?.name || "normal";
     card.classList.add(`bg-${tipoPrincipal}`);
@@ -78,7 +77,6 @@ async function mostrarPokemon(data) {
     const alturaMetros = (data.height ?? 0) / 10;
     const pesoKg = (data.weight ?? 0) / 10;
 
-    // Tipos traducidos con clase en inglés (para color)
     const tiposHTML = await Promise.all(
         data.types.map(async t => {
             const respType = await fetch(t.type.url);
@@ -97,7 +95,23 @@ async function mostrarPokemon(data) {
   `;
     card.appendChild(info);
 
-    // Hover para sprites
+    // Estrella favoritos arriba derecha
+    const favStar = document.createElement("span");
+    favStar.className = "fav-star";
+    favStar.textContent = favoritos.includes(data.id) ? "★" : "☆";
+    favStar.onclick = (e) => {
+        e.stopPropagation();
+        if (favoritos.includes(data.id)) {
+            favoritos = favoritos.filter(id => id !== data.id);
+            favStar.textContent = "☆";
+        } else {
+            favoritos.push(data.id);
+            favStar.textContent = "★";
+        }
+    };
+    card.appendChild(favStar);
+
+    // Hover sprites
     let intervalId = null;
     let index = 0;
     card.addEventListener("mouseenter", () => {
@@ -117,7 +131,7 @@ async function mostrarPokemon(data) {
         index = 0;
     });
 
-    // Clic para detalle
+    // Click detalle
     card.addEventListener("click", async () => {
         const respSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${data.id}`);
         const speciesData = await respSpecies.json();
@@ -136,7 +150,6 @@ async function mostrarPokemon(data) {
             })
         );
 
-        // Estadísticas traducidas
         const statsTraducidas = await Promise.all(
             data.stats.map(async s => {
                 const nombreEsp = await traducirStat(s.stat.url);
@@ -233,6 +246,7 @@ function actualizarPaginador() {
 filtroTipo.addEventListener("change", async () => {
     await generarListaPorTipo(filtroTipo.value);
     buscador.value = "";
+    filtroFavoritos.value = "all"; // reset filtro favoritos
     cargarPagina(1);
 });
 
@@ -241,7 +255,20 @@ buscador.addEventListener("input", () => {
     if (!texto) {
         listaFiltrada = [...listaCompleta];
     } else {
-        listaFiltrada = listaCompleta.filter(p => p.name.toLowerCase().includes(texto));
+        listaFiltrada = listaCompleta.filter(p => {
+            const coincideNombre = p.name.toLowerCase().includes(texto); // parcial
+            const coincideID = p.id.toString() === texto; // exacto
+            return coincideNombre || coincideID;
+        });
+    }
+    cargarPagina(1);
+});
+
+filtroFavoritos.addEventListener("change", () => {
+    if (filtroFavoritos.value === "fav") {
+        listaFiltrada = listaCompleta.filter(p => favoritos.includes(p.id));
+    } else {
+        listaFiltrada = [...listaCompleta];
     }
     cargarPagina(1);
 });

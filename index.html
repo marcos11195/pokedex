@@ -9,11 +9,13 @@
         <header class="pokedex-header">
             <h1>Pokédex Nacional</h1>
             <div class="filtros">
-                <!-- Buscador -->
+
                 <input type="text" id="buscador"
                     placeholder="🔍 Buscar Pokémon...">
-
-                <!-- Filtro por tipo -->
+                <select id="filtro-favoritos">
+                    <option value="all">Todos</option>
+                    <option value="fav">Favoritos</option>
+                </select>
                 <select id="tipo">
                     <option value>Todos los tipos</option>
                     <option value="fire">Fuego</option>
@@ -27,9 +29,10 @@
                     <option value="dragon">Dragón</option>
                     <option value="dark">Siniestro</option>
                     <option value="fairy">Hada</option>
-                    <!-- ... resto de tipos -->
+
                 </select>
             </div>
+            <aside id="detalle" class="detalle"></aside>
         </header>
 
         <main>
@@ -37,8 +40,6 @@
             <div id="pokedex" class="pokedex-grid"></div>
             <div id="paginador-bottom" class="paginador"></div>
         </main>
-
-        <aside id="detalle" class="detalle"></aside>
 
         <script src="js/script.js"></script>
     </body>

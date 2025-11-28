@@ -6,50 +6,40 @@
         <link rel="stylesheet" href="css/style.css">
     </head>
     <body>
-        <h1>Pokédex</h1>
+        <header class="pokedex-header">
+            <h1>Pokédex Nacional</h1>
+            <div class="filtros">
+                <!-- Buscador -->
+                <input type="text" id="buscador"
+                    placeholder="🔍 Buscar Pokémon...">
 
-        <!-- Barra de filtros -->
-        <div class="filtros">
-            <label for="tipo">Tipo:</label>
-            <select id="tipo">
-                <option value>Todos</option>
-                <option value="normal">Normal</option>
-                <option value="fire">Fuego</option>
-                <option value="water">Agua</option>
-                <option value="grass">Planta</option>
-                <option value="electric">Eléctrico</option>
-                <option value="ice">Hielo</option>
-                <option value="fighting">Lucha</option>
-                <option value="poison">Veneno</option>
-                <option value="ground">Tierra</option>
-                <option value="flying">Volador</option>
-                <option value="psychic">Psíquico</option>
-                <option value="bug">Bicho</option>
-                <option value="rock">Roca</option>
-                <option value="ghost">Fantasma</option>
-                <option value="dark">Siniestro</option>
-                <option value="dragon">Dragón</option>
-                <option value="steel">Acero</option>
-                <option value="fairy">Hada</option>
-            </select>
+                <!-- Filtro por tipo -->
+                <select id="tipo">
+                    <option value>Todos los tipos</option>
+                    <option value="fire">Fuego</option>
+                    <option value="water">Agua</option>
+                    <option value="grass">Planta</option>
+                    <option value="electric">Eléctrico</option>
+                    <option value="psychic">Psíquico</option>
+                    <option value="rock">Roca</option>
+                    <option value="ground">Tierra</option>
+                    <option value="ice">Hielo</option>
+                    <option value="dragon">Dragón</option>
+                    <option value="dark">Siniestro</option>
+                    <option value="fairy">Hada</option>
+                    <!-- ... resto de tipos -->
+                </select>
+            </div>
+        </header>
 
-            <label for="buscador">Buscar:</label>
-            <input type="text" id="buscador" placeholder="Ej: Pikachu">
-        </div>
+        <main>
+            <div id="paginador-top" class="paginador"></div>
+            <div id="pokedex" class="pokedex-grid"></div>
+            <div id="paginador-bottom" class="paginador"></div>
+        </main>
 
-        <!-- Paginador superior -->
-        <div id="paginador-top"></div>
+        <aside id="detalle" class="detalle"></aside>
 
-        <!-- 🔹 Div de detalle del Pokémon seleccionado -->
-        <div id="detalle"></div>
-
-        <!-- Contenedor de la Pokédex -->
-        <div id="pokedex"></div>
-
-        <!-- Paginador inferior -->
-        <div id="paginador-bottom"></div>
-
-        <!-- Script principal -->
         <script src="js/script.js"></script>
     </body>
 </html>

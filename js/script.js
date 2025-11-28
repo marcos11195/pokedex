@@ -23,7 +23,19 @@ const generacionRegion = {
     "generation-ix": "Paldea"
 };
 
-// Obtener lista de Pokémon por tipo
+// Función auxiliar para obtener traducción
+function traducirNombre(array, idioma = "es") {
+    if (!Array.isArray(array)) return "";
+    const traduccion = array.find(n => n.language?.name === idioma);
+    return traduccion ? traduccion.name : array[0]?.name || "";
+}
+
+// Función auxiliar para traducir estadísticas
+async function traducirStat(statUrl) {
+    const resp = await fetch(statUrl);
+    const statData = await resp.json();
+    return traducirNombre(statData.names, "es");
+}
 async function generarListaPorTipo(tipo) {
     if (!tipo) {
         const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
@@ -44,9 +56,7 @@ async function generarListaPorTipo(tipo) {
     listaCompleta.sort((a, b) => a.id - b.id);
     listaFiltrada = [...listaCompleta];
 }
-
-// Mostrar tarjeta de Pokémon
-function mostrarPokemon(data) {
+async function mostrarPokemon(data) {
     const card = document.createElement("div");
     card.className = "pokemon";
 
@@ -65,23 +75,29 @@ function mostrarPokemon(data) {
     img.src = sprites[0] || "img/pokeball.png";
     card.appendChild(img);
 
-    const tiposHTML = data.types
-        .map(t => `<span class="tipo ${t.type.name}">${t.type.name.toUpperCase()}</span>`)
-        .join(" ");
-
     const alturaMetros = (data.height ?? 0) / 10;
     const pesoKg = (data.weight ?? 0) / 10;
+
+    // Tipos traducidos con clase en inglés (para color)
+    const tiposHTML = await Promise.all(
+        data.types.map(async t => {
+            const respType = await fetch(t.type.url);
+            const typeData = await respType.json();
+            const nombreEsp = traducirNombre(typeData.names, "es");
+            return `<span class="tipo ${t.type.name}">${nombreEsp}</span>`;
+        })
+    );
 
     const info = document.createElement("div");
     info.innerHTML = `
     <h3>#${data.id} ${data.name.toUpperCase()}</h3>
     <p>Altura: ${alturaMetros} m</p>
     <p>Peso: ${pesoKg} kg</p>
-    <p>Tipo: ${tiposHTML}</p>
+    <p>Tipo: ${tiposHTML.join(" ")}</p>
   `;
     card.appendChild(info);
 
-    // Ciclo de sprites solo en hover
+    // Hover para sprites
     let intervalId = null;
     let index = 0;
     card.addEventListener("mouseenter", () => {
@@ -90,7 +106,6 @@ function mostrarPokemon(data) {
                 index = (index + 1) % sprites.length;
                 img.src = sprites[index];
             }, 1000);
-            card.style.cursor = "pointer";
         }
     });
     card.addEventListener("mouseleave", () => {
@@ -102,44 +117,48 @@ function mostrarPokemon(data) {
         index = 0;
     });
 
-    // Evento de clic para mostrar detalle
+    // Clic para detalle
     card.addEventListener("click", async () => {
-        // Obtener especie para saber la generación
         const respSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${data.id}`);
         const speciesData = await respSpecies.json();
+
+        const nombreEsp = traducirNombre(speciesData.names, "es") || data.name;
+        const flavorEspRaw = speciesData.flavor_text_entries.find(f => f.language?.name === "es")?.flavor_text || "";
+        const flavorEsp = flavorEspRaw.replace(/\f/g, " ").replace(/\n/g, " ").trim();
         const generacion = speciesData.generation?.name;
         const region = generacionRegion[generacion] || "Desconocida";
 
-        // Construir tabla de estadísticas
+        const movimientos = await Promise.all(
+            data.moves.slice(0, 8).map(async m => {
+                const respMove = await fetch(m.move.url);
+                const moveData = await respMove.json();
+                return traducirNombre(moveData.names, "es");
+            })
+        );
+
+        // Estadísticas traducidas
+        const statsTraducidas = await Promise.all(
+            data.stats.map(async s => {
+                const nombreEsp = await traducirStat(s.stat.url);
+                return `<tr><td>${nombreEsp}</td><td>${s.base_stat}</td></tr>`;
+            })
+        );
+
         const statsTable = `
       <table class="stats-table">
-        <thead>
-          <tr>
-            <th>Stat</th>
-            <th>Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.stats.map(s => `
-            <tr>
-              <td>${s.stat.name.toUpperCase()}</td>
-              <td>${s.base_stat}</td>
-            </tr>
-          `).join("")}
-        </tbody>
+        <thead><tr><th>Estadística</th><th>Valor</th></tr></thead>
+        <tbody>${statsTraducidas.join("")}</tbody>
       </table>
     `;
 
         detalle.style.display = "block";
         detalle.innerHTML = `
-      <h2>Pokémon seleccionado</h2>
-      <img src="${sprites[0] || "img/pokeball.png"}" alt="${data.name}">
-      <h3>#${data.id} ${data.name.toUpperCase()}</h3>
-      <p><strong>Altura:</strong> ${alturaMetros} m</p>
-      <p><strong>Peso:</strong> ${pesoKg} kg</p>
-      <p><strong>Tipos:</strong> ${tiposHTML}</p>
+      <h2>${nombreEsp}</h2>
+      <img src="${sprites[0] || "img/pokeball.png"}" alt="${nombreEsp}">
+      <p><strong>Descripción:</strong> ${flavorEsp}</p>
       <p><strong>Región:</strong> ${region}</p>
-      <p><strong>Habilidades:</strong> ${data.abilities.map(a => a.ability.name).join(", ")}</p>
+      <p><strong>Tipos:</strong> ${tiposHTML.join(" ")}</p>
+      <p><strong>Movimientos:</strong> ${movimientos.join(", ")}</p>
       ${statsTable}
       <button id="cerrar-detalle">Cerrar</button>
     `;
@@ -152,8 +171,6 @@ function mostrarPokemon(data) {
 
     pokedex.appendChild(card);
 }
-
-// Cargar una página
 async function cargarPagina(numPagina) {
     pokedex.innerHTML = "";
 
@@ -166,13 +183,14 @@ async function cargarPagina(numPagina) {
         slice.map(item => fetch(item.url).then(r => r.json()))
     );
 
-    resultados.forEach(mostrarPokemon);
+    for (const dato of resultados) {
+        await mostrarPokemon(dato);
+    }
 
     paginaActual = numPagina;
     actualizarPaginador();
 }
 
-// Paginador arriba y abajo
 function actualizarPaginador() {
     paginadorTop.innerHTML = "";
     paginadorBottom.innerHTML = "";
@@ -223,7 +241,7 @@ buscador.addEventListener("input", () => {
     if (!texto) {
         listaFiltrada = [...listaCompleta];
     } else {
-        listaFiltrada = listaCompleta.filter(p => p.name.includes(texto));
+        listaFiltrada = listaCompleta.filter(p => p.name.toLowerCase().includes(texto));
     }
     cargarPagina(1);
 });

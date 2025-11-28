@@ -23,6 +23,24 @@ const generacionRegion = {
     "generation-viii": "Galar",
     "generation-ix": "Paldea"
 };
+document.getElementById("toggle-theme").addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+
+    // Guardar preferencia
+    if (document.body.classList.contains("dark")) {
+        localStorage.setItem("theme", "dark");
+    } else {
+        localStorage.setItem("theme", "light");
+    }
+});
+
+// Al cargar la página, aplicar preferencia guardada
+window.addEventListener("DOMContentLoaded", () => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+    }
+});
 
 function traducirNombre(array, idioma = "es") {
     if (!Array.isArray(array)) return "";
@@ -36,22 +54,32 @@ async function traducirStat(statUrl) {
     return traducirNombre(statData.names, "es");
 }
 async function generarListaPorTipo(tipo) {
+    let data;
+
     if (!tipo) {
-        const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
-        const data = await resp.json();
+        // Pedimos TODOS los Pokémon sin fijar límite exacto
+        const resp = await fetch("https://pokeapi.co/api/v2/pokemon?limit=20000");
+        data = await resp.json();
         listaCompleta = data.results.map(p => {
             const id = parseInt(p.url.split("/").slice(-2, -1)[0], 10);
             return { name: p.name, url: p.url, id };
         });
     } else {
+        // Si filtramos por tipo, la API ya devuelve solo los de ese tipo
         const resp = await fetch(`https://pokeapi.co/api/v2/type/${tipo}`);
-        const data = await resp.json();
+        data = await resp.json();
         listaCompleta = data.pokemon.map(p => {
             const id = parseInt(p.pokemon.url.split("/").slice(-2, -1)[0], 10);
             return { name: p.pokemon.name, url: p.pokemon.url, id };
         });
     }
+
+    // Ordenamos por ID para que los normales (1–1025) aparezcan primero
     listaCompleta.sort((a, b) => a.id - b.id);
+
+    // Aquí ya no dependemos de un número fijo, usamos el tamaño real del array
+    console.log("Total Pokémon cargados:", listaCompleta.length);
+
     listaFiltrada = [...listaCompleta];
 }
 async function mostrarPokemon(data) {

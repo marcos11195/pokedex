@@ -1,31 +1,93 @@
+/* Variables de color */
+:root {
+    --bg-color: #fafafa;
+    --text-color: #333;
+    --card-bg: #fff;
+    --card-shadow: rgba(0, 0, 0, 0.15);
+    --detail-bg: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+}
+
+body.dark {
+    --bg-color: #2e3440;
+    /* gris azulado suave */
+    --text-color: #e5e9f0;
+    /* texto claro */
+    --card-bg: #3b4252;
+    /* tarjetas gris medio */
+    --card-shadow: rgba(0, 0, 0, 0.4);
+    --detail-bg: linear-gradient(to top, rgba(46, 52, 64, 0.95), rgba(59, 66, 82, 0.8));
+}
+
+/* Base */
 body {
     font-family: Arial, sans-serif;
-    background: #fafafa;
+    background: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 20px;
     text-align: center;
+    background-image: radial-gradient(circle at top left, #ff5252 0%, #1e1e1e 100%);
+    background-attachment: fixed;
 }
 
 h1 {
     margin-bottom: 20px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #fff;
+    background: linear-gradient(to bottom, #d32f2f, #b71c1c);
+    padding: 12px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
-/* Filtros */
+/* Botón de tema estilo Pokédex */
+#toggle-theme {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    padding: 10px 14px;
+    border: 2px solid #000;
+    border-radius: 50%;
+    background: #d32f2f;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: transform 0.2s, background 0.3s;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+#toggle-theme:hover {
+    background: #b71c1c;
+    transform: scale(1.1);
+}
+
+/* Filtros estilo panel Pokédex */
 .filtros {
     display: flex;
     justify-content: center;
     gap: 15px;
     margin-bottom: 20px;
     flex-wrap: wrap;
-    /* permite que se acomoden en pantallas pequeñas */
+    background: #212121;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
 .filtros select,
 .filtros input {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid #d32f2f;
     font-size: 14px;
+    background: #fff;
+    color: #000;
+    font-weight: bold;
 }
 
 /* Grid de la Pokédex */
@@ -36,23 +98,28 @@ h1 {
     gap: 15px;
 }
 
-/* Tarjeta Pokémon */
+/* Tarjeta Pokémon estilo Pokédex */
 .pokemon {
     position: relative;
-    border-radius: 12px;
+    border-radius: 16px;
     width: 200px;
     overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    background: #fff;
-    transition: transform 0.2s;
+    background: var(--card-bg);
+    border: 3px solid #d32f2f;
+    transition: transform 0.2s, background 0.3s;
+}
+
+body.dark .pokemon {
+    background: linear-gradient(145deg, #3b4252, #2e3440);
 }
 
 .pokemon:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px);
 }
 
 /* Zona central con degradado */
@@ -63,12 +130,19 @@ h1 {
     text-align: center;
 }
 
+body.dark .pokemon div {
+    background: linear-gradient(to top, rgba(67, 76, 94, 0.9), rgba(76, 86, 106, 0.6));
+}
+
 .pokemon img {
     width: 120px;
     height: 120px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
 }
 
-/* Tipos */
+/* Tipos: se mantienen iguales en claro y oscuro */
 .tipo {
     display: inline-block;
     padding: 4px 8px;
@@ -77,79 +151,6 @@ h1 {
     font-weight: bold;
     margin: 2px;
     font-size: 12px;
-}
-
-/* Colores suaves de fondo por tipo principal */
-.bg-normal {
-    background: #A8A87833;
-}
-
-.bg-fire {
-    background: #F0803033;
-}
-
-.bg-water {
-    background: #6890F033;
-}
-
-.bg-grass {
-    background: #78C85033;
-}
-
-.bg-electric {
-    background: #F8D03033;
-}
-
-.bg-ice {
-    background: #98D8D833;
-}
-
-.bg-fighting {
-    background: #C0302833;
-}
-
-.bg-poison {
-    background: #A040A033;
-}
-
-.bg-ground {
-    background: #E0C06833;
-}
-
-.bg-flying {
-    background: #A890F033;
-}
-
-.bg-psychic {
-    background: #F8588833;
-}
-
-.bg-bug {
-    background: #A8B82033;
-}
-
-.bg-rock {
-    background: #B8A03833;
-}
-
-.bg-ghost {
-    background: #70589833;
-}
-
-.bg-dark {
-    background: #70584833;
-}
-
-.bg-dragon {
-    background: #7038F833;
-}
-
-.bg-steel {
-    background: #B8B8D033;
-}
-
-.bg-fairy {
-    background: #EE99AC33;
 }
 
 /* Colores de etiquetas de tipo */
@@ -232,32 +233,189 @@ h1 {
     background: #EE99AC;
 }
 
-/* Paginador */
+/* Fondos de cartas por tipo en modo claro */
+.bg-normal {
+    background: linear-gradient(to top, #A8A878, #dfe5d0);
+}
+
+.bg-fire {
+    background: linear-gradient(to top, #F08030, #f5c4a0);
+}
+
+.bg-water {
+    background: linear-gradient(to top, #6890F0, #b0c8f8);
+}
+
+.bg-grass {
+    background: linear-gradient(to top, #78C850, #c0e8a0);
+}
+
+.bg-electric {
+    background: linear-gradient(to top, #F8D030, #fce880);
+}
+
+.bg-ice {
+    background: linear-gradient(to top, #98D8D8, #d0f0f0);
+}
+
+.bg-fighting {
+    background: linear-gradient(to top, #C03028, #e08078);
+}
+
+.bg-poison {
+    background: linear-gradient(to top, #A040A0, #d080d0);
+}
+
+.bg-ground {
+    background: linear-gradient(to top, #E0C068, #f0e0a0);
+}
+
+.bg-flying {
+    background: linear-gradient(to top, #A890F0, #d0c8f8);
+}
+
+.bg-psychic {
+    background: linear-gradient(to top, #F85888, #f8a0b8);
+}
+
+.bg-bug {
+    background: linear-gradient(to top, #A8B820, #d0e060);
+}
+
+.bg-rock {
+    background: linear-gradient(to top, #B8A038, #e0c060);
+}
+
+.bg-ghost {
+    background: linear-gradient(to top, #705898, #a090c0);
+}
+
+.bg-dark {
+    background: linear-gradient(to top, #705848, #a08070);
+}
+
+.bg-dragon {
+    background: linear-gradient(to top, #7038F8, #a080f8);
+}
+
+.bg-steel {
+    background: linear-gradient(to top, #B8B8D0, #d0d0e0);
+}
+
+.bg-fairy {
+    background: linear-gradient(to top, #EE99AC, #f8c0d0);
+}
+
+/* Fondos de cartas por tipo en modo oscuro */
+body.dark .bg-normal {
+    background: linear-gradient(to top, #A8A878, #3b4252);
+}
+
+body.dark .bg-fire {
+    background: linear-gradient(to top, #F08030, #3b4252);
+}
+
+body.dark .bg-water {
+    background: linear-gradient(to top, #6890F0, #3b4252);
+}
+
+body.dark .bg-grass {
+    background: linear-gradient(to top, #78C850, #3b4252);
+}
+
+body.dark .bg-electric {
+    background: linear-gradient(to top, #F8D030, #3b4252);
+}
+
+body.dark .bg-ice {
+    background: linear-gradient(to top, #98D8D8, #3b4252);
+}
+
+body.dark .bg-fighting {
+    background: linear-gradient(to top, #C03028, #3b4252);
+}
+
+body.dark .bg-poison {
+    background: linear-gradient(to top, #A040A0, #3b4252);
+}
+
+body.dark .bg-ground {
+    background: linear-gradient(to top, #E0C068, #3b4252);
+}
+
+body.dark .bg-flying {
+    background: linear-gradient(to top, #A890F0, #3b4252);
+}
+
+body.dark .bg-psychic {
+    background: linear-gradient(to top, #F85888, #3b4252);
+}
+
+body.dark .bg-bug {
+    background: linear-gradient(to top, #A8B820, #3b4252);
+}
+
+body.dark .bg-rock {
+    background: linear-gradient(to top, #B8A038, #3b4252);
+}
+
+body.dark .bg-ghost {
+    background: linear-gradient(to top, #705898, #3b4252);
+}
+
+body.dark .bg-dark {
+    background: linear-gradient(to top, #705848, #3b4252);
+}
+
+body.dark .bg-dragon {
+    background: linear-gradient(to top, #7038F8, #3b4252);
+}
+
+body.dark .bg-steel {
+    background: linear-gradient(to top, #B8B8D0, #3b4252);
+}
+
+body.dark .bg-fairy {
+    background: linear-gradient(to top, #EE99AC, #3b4252);
+}
+
+/* Paginador estilo Pokédex */
 .page-btn {
     margin: 2px;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 4px;
-    background: #eee;
+    padding: 6px 12px;
+    border: 2px solid #d32f2f;
+    border-radius: 6px;
+    background: #fff;
     cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.page-btn:hover {
+    background: #d32f2f;
+    color: #fff;
+    transform: scale(1.1);
 }
 
 .page-btn.active {
-    background: #007bff;
+    background: #b71c1c;
     color: #fff;
 }
 
-/* Detalle */
+/* Detalle estilo Pokédex */
 #detalle {
+    display: none;
+    /* 🔴 Oculto por defecto */
     margin: 20px auto;
     max-width: 600px;
     padding: 20px;
-    border-radius: 12px;
-    background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    background: var(--detail-bg);
+    box-shadow: 0 4px 12px var(--card-shadow);
     text-align: center;
-    display: none;
+    border: 3px solid #d32f2f;
 }
+
 
 #detalle img {
     width: 150px;
@@ -299,8 +457,6 @@ h1 {
 }
 
 /* --- Responsive --- */
-
-/* Tablets */
 @media (max-width: 768px) {
     body {
         padding: 10px;
@@ -320,7 +476,6 @@ h1 {
     }
 }
 
-/* Móviles */
 @media (max-width: 480px) {
     .filtros {
         flex-direction: column;
